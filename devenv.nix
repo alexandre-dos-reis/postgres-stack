@@ -9,14 +9,16 @@
 
   OPENAPI_API_PORT = PGRST_PORT;
   OPENAPI_UI_PORT = 3434;
-in {
+
+  in {
   # https://devenv.sh/basics/
   env.GREET = "devenv";
 
   # https://devenv.sh/packages/
-  packages = with pkgs; [ 
+  packages = with pkgs; [
     bun
     postgrest
+    watchexec
   ];
 
   processes = {
@@ -27,34 +29,38 @@ in {
       PGRST_OPEN_API_MODE="ignore-privileges" \
         postgrest
     '';
-    openapi.exec = ''
-      cd apps/openapi && \
+
+    openapi-ui.exec = ''
+      cd apps/openapi-ui && \
       VITE_OPENAPI_API_PORT=${toString OPENAPI_API_PORT} \
-        bun run dev --port ${toString OPENAPI_UI_PORT}
+        ${pkgs.bun}/bin/bun run dev --port ${toString OPENAPI_UI_PORT}
     '';
 
+    openapi-codegen.exec = ''
+      cd packages/openapi-codegen && \
+        ${pkgs.watchexec}/bin/watchexec -- \
+          ${pkgs.bun}/bin/bunx --bunx @hey-api/openapi-ts \
+          -i http://localhost:${toString PGRST_PORT} \
+          -o src
+    '';
   };
-
-  # https://devenv.sh/scripts/
-  scripts.hello.exec = "echo hello from $GREET";
 
   enterShell = ''
     hello
     git --version
   '';
 
-
   services.postgres = {
-      enable = true;
-      package = pkgs.postgresql_16;
-      listen_addresses = "127.0.0.1";
-      port = DB_PORT;
-      initialDatabases = [
-        { name = DB_DATABASE; }
-      ];
-      initialScript = ''
-        drop role if exists ${DB_OWNER_USER};
-        create role ${DB_OWNER_USER} with login password '${DB_OWNER_PASS}' superuser;
-      '';
+    enable = true;
+    package = pkgs.postgresql_16;
+    listen_addresses = "127.0.0.1";
+    port = DB_PORT;
+    initialDatabases = [
+      { name = DB_DATABASE; }
+    ];
+    initialScript = ''
+      drop role if exists ${DB_OWNER_USER};
+      create role ${DB_OWNER_USER} with login password '${DB_OWNER_PASS}' superuser;
+    '';
   };
 }
