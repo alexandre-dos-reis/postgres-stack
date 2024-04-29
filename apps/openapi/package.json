@@ -1,0 +1,15 @@
+{
+  "name": "openapi",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --bunx vite",
+    "build": "bun --bunx vite build",
+    "preview": "bun --bunx vite preview"
+  },
+  "devDependencies": {
+    "swagger-ui": "^5.17.2",
+    "vite": "^5.2.0"
+  }
+}

@@ -1,19 +1,21 @@
-{ pkgs, lib, config, inputs, ... }:
-let 
+{ pkgs, lib, config, inputs, ... }: let 
   DB_DATABASE = "mydb";
   DB_PORT = 9876;
   DB_OWNER_USER = "alexandre";
   DB_OWNER_PASS = "alexandre";
 
   PGRST_PORT = 3333;
+  PGRST_DB_ANON_ROLE = "alexandre";
 
+  OPENAPI_API_PORT = PGRST_PORT;
+  OPENAPI_UI_PORT = 3434;
 in {
   # https://devenv.sh/basics/
   env.GREET = "devenv";
 
   # https://devenv.sh/packages/
   packages = with pkgs; [ 
-    nodejs_18
+    bun
     postgrest
   ];
 
@@ -21,7 +23,14 @@ in {
     postgrest.exec = ''
       PGRST_DB_URI="postgres://${DB_OWNER_USER}:${DB_OWNER_PASS}@localhost:${toString DB_PORT}/${DB_DATABASE}" \
       PGRST_SERVER_PORT="${toString PGRST_PORT}" \
+      PGRST_DB_ANON_ROLE="${PGRST_DB_ANON_ROLE}" \
+      PGRST_OPEN_API_MODE="ignore-privileges" \
         postgrest
+    '';
+    openapi.exec = ''
+      cd apps/openapi && \
+      VITE_OPENAPI_API_PORT=${toString OPENAPI_API_PORT} \
+        bun run dev --port ${toString OPENAPI_UI_PORT}
     '';
 
   };
@@ -47,8 +56,5 @@ in {
         drop role if exists ${DB_OWNER_USER};
         create role ${DB_OWNER_USER} with login password '${DB_OWNER_PASS}' superuser;
       '';
-      # settings = {};
   };
-
-
 }
