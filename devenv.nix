@@ -1,12 +1,11 @@
 { pkgs, lib, config, inputs, ... }: let 
+  # https://devenv.sh
 
-  APP_ENV_DEV = "development";
-  APP_ENV_PROD = "production";
-  APP_ENV_CI = "ci";
-  APP_ENV_TEST = "test";
-
+  # Global vars
+  # Roles
   APP_ANON_ROLE = "anon";
   APP_PERSON_ROLE = "person";
+  # Schemas: one for internal and one per app.
 
   APP_PRIVATE_SCHEMA = "app_private";
   APP_FRONT_SCHEMA = "app_front";
@@ -22,12 +21,12 @@
   PGRST_PORT = 3333;
   PGRST_DB_ANON_ROLE = "alexandre";
 
-  # OpenApi
+  # OpenApi UI
   OPENAPI_UI_PORT = 3434;
   OPENAPI_API_PORT = PGRST_PORT;
   in {
   env = {
-    APP_ENV = APP_ENV_DEV;
+    APP_ENV = "development";
   };
 
   # https://devenv.sh/packages/
@@ -39,6 +38,7 @@
 
   scripts = {
     # Graphile Migrate
+    # https://github.com/graphile/migrate
     gm.exec = ''
       cd apps/database && \
         DATABASE_URL="postgres://${DB_OWNER_USER}:${DB_OWNER_PASS}@localhost:${toString DB_PORT}/${DB_DATABASE}" \
@@ -54,12 +54,15 @@
   };
 
   processes = {
+# Postgrest
+# https://postgrest.org/en/v12/references/api/schemas.html#schemas
+# https://postgrest.org/en/v12/references/configuration.html
     postgrest.exec = ''
       PGRST_DB_URI="postgres://${DB_OWNER_USER}:${DB_OWNER_PASS}@localhost:${toString DB_PORT}/${DB_DATABASE}" \
         PGRST_SERVER_PORT="${toString PGRST_PORT}" \
         PGRST_OPEN_API_MODE="ignore-privileges" \
         PGRST_DB_ANON_ROLE="${PGRST_DB_ANON_ROLE}" \
-        PGRST_DB_SCHEMAS="" \
+        PGRST_DB_SCHEMAS="${APP_FRONT_SCHEMA}, ${APP_ADMIN_SCHEMA}" \
         postgrest
     '';
 
