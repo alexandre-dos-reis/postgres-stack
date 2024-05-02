@@ -43,24 +43,29 @@
     lolcat
   ];
 
+
+  enterShell = ''
+    echo "Welcome to the Postgres Stack !" | ${pkgs.cowsay}/bin/cowsay | ${pkgs.lolcat}/bin/lolcat
+  '';
+
   scripts = {
     # Graphile Migrate
     # https://github.com/graphile/migrate
     gm.exec = ''
       cd apps/database && \
-        DATABASE_URL="postgres://${DB_OWNER_USER}:${DB_OWNER_PASS}@localhost:${toString DB_PORT}/${DB_DATABASE}" \
-        SHADOW_DATABASE_URL="postgres://${DB_OWNER_USER}:${DB_OWNER_PASS}@localhost:${toString DB_PORT}/${DB_DATABASE}_shadow" \
-        ROOT_DATABASE_URL="postgres://${DB_OWNER_USER}:${DB_OWNER_PASS}@localhost:${toString DB_PORT}/postgres" \
-        ANON_ROLE=${APP_ANON_ROLE} \
-        PERSON_ROLE=${APP_PERSON_ROLE} \
-        PRIVATE_SCHEMA=${APP_PRIVATE_SCHEMA} \
-        FRONT_SCHEMA=${APP_FRONT_SCHEMA} \
-        ADMIN_SCHEMA=${APP_ADMIN_SCHEMA} \
-        ${pkgs.bun}/bin/bunx --bunx graphile-migrate@next $1
+      DATABASE_URL="postgres://${DB_OWNER_USER}:${DB_OWNER_PASS}@localhost:${toString DB_PORT}/${DB_DATABASE}" \
+      SHADOW_DATABASE_URL="postgres://${DB_OWNER_USER}:${DB_OWNER_PASS}@localhost:${toString DB_PORT}/${DB_DATABASE}_shadow" \
+      ROOT_DATABASE_URL="postgres://${DB_OWNER_USER}:${DB_OWNER_PASS}@localhost:${toString DB_PORT}/postgres" \
+      ANON_ROLE=${APP_ANON_ROLE} \
+      PERSON_ROLE=${APP_PERSON_ROLE} \
+      PRIVATE_SCHEMA=${APP_PRIVATE_SCHEMA} \
+      FRONT_SCHEMA=${APP_FRONT_SCHEMA} \
+      ADMIN_SCHEMA=${APP_ADMIN_SCHEMA} \
+      ${pkgs.bun}/bin/bunx --bunx graphile-migrate@next $1
     '';
 
     init.exec = ''
-      for file in ./apps/database/init/*; do 
+      for file in ./apps/database/init/*; do
         POSTGRES_USER="${DB_OWNER_USER}" \
         POSTGRES_PASS="${DB_OWNER_PASS}" \
         POSTGRES_DB="${DB_DATABASE}" \
@@ -81,38 +86,31 @@
     # https://postgrest.org/en/v12/references/configuration.html
     # https://postgrest.org/en/v12/references/configuration.html#openapi-mode
     postgrest.exec = ''
+      PGRST_LOG_LEVEL="info" \
       PGRST_DB_URI="postgres://${APP_AUTH_ROLE}:${APP_AUTH_PASS}@localhost:${toString DB_PORT}/${DB_DATABASE}" \
-        PGRST_SERVER_PORT="${toString PGRST_PORT}" \
-        PGRST_DB_ANON_ROLE="${PGRST_DB_ANON_ROLE}" \
-        PGRST_DB_SCHEMAS="${APP_ADMIN_SCHEMA}, ${APP_FRONT_SCHEMA}" \
-        PGRST_JWT_SECRET=${PGRST_JWT_SECRET} \
-        PGRST_OPENAPI_MODE="ignore-privileges" \
-        PGRST_LOG_LEVEL="info" \
-        postgrest
+      PGRST_SERVER_PORT="${toString PGRST_PORT}" \
+      PGRST_DB_ANON_ROLE="${PGRST_DB_ANON_ROLE}" \
+      PGRST_DB_SCHEMAS="${APP_ADMIN_SCHEMA}, ${APP_FRONT_SCHEMA}" \
+      PGRST_JWT_SECRET=${PGRST_JWT_SECRET} \
+      PGRST_OPENAPI_MODE="ignore-privileges" \
+      postgrest
     '';
 
     openapi-ui.exec = ''
       cd apps/openapi-ui && \
-        VITE_OPENAPI_API_PORT=${toString PGRST_PORT} \
-        ${pkgs.bun}/bin/bun run dev --port ${toString OPENAPI_UI_PORT}
+      VITE_OPENAPI_API_PORT=${toString PGRST_PORT} \
+      ${pkgs.bun}/bin/bun run dev --port ${toString OPENAPI_UI_PORT}
     '';
 
     openapi-codegen.exec = ''
       cd packages/openapi-codegen && \
-        ${pkgs.watchexec}/bin/watchexec -- \
-        ${pkgs.bun}/bin/bunx --bunx @hey-api/openapi-ts \
-        -i http://localhost:${toString PGRST_PORT} \
-        -o src
+      ${pkgs.watchexec}/bin/watchexec -- \
+      ${pkgs.bun}/bin/bunx --bunx @hey-api/openapi-ts \
+      -i http://localhost:${toString PGRST_PORT} \
+      -o src
     '';
   };
 
-
-
-  
-
-  enterShell = ''
-    echo "Welcome to the Postgres Stack !" | ${pkgs.cowsay}/bin/cowsay | ${pkgs.lolcat}/bin/lolcat
-  '';
 
   services.postgres = {
     enable = true;
