@@ -30,25 +30,11 @@ grant usage on schema :FRONT_SCHEMA to :ANON_ROLE;
 alter default privileges in schema public, :FRONT_SCHEMA, :ADMIN_SCHEMA, app_utils, app_types grant usage, select on sequences to :PERSON_ROLE;
 alter default privileges in schema public, :FRONT_SCHEMA, :ADMIN_SCHEMA, app_utils, app_types grant execute on functions to :PERSON_ROLE;
 
-/*
- * Schema APP_UTILS
- */
-create or replace function app_utils.slugify(v text) returns text as $$
-begin
-  -- 1. trim trailing and leading whitespaces from text
-  -- 2. remove accents (diacritic signs) from a given text
-  -- 3. lowercase unaccented text
-  -- 4. replace non-alphanumeric (excluding hyphen, underscore) with a hyphen
-  -- 5. trim leading and trailing hyphens
-  return trim(BOTH '-' FROM regexp_replace(lower(public.unaccent(trim(v))), '[^a-z0-9\\-_]+', '-', 'gi'));
-end;
-$$ language PLPGSQL strict immutable ;
 
+--!include app-utils/functions.sql
 
-/*
- * products Table
- */
-create table if not exists :PRIVATE_SCHEMA.artworks (
+drop table if exists :PRIVATE_SCHEMA.artworks;
+create table :PRIVATE_SCHEMA.artworks (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
   name text not null,
   description text,
