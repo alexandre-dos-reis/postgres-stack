@@ -1,29 +1,34 @@
 { pkgs, lib, config, inputs, ... }: let 
   # https://devenv.sh
 
-  # Global vars
   # Roles
   APP_ANON_ROLE = "anon";
   APP_PERSON_ROLE = "person";
-  # Schemas: one for internal and one per app.
+  APP_AUTH_ROLE = "auth";
+  APP_AUTH_PASS = "auth";
 
+  # One internal for all table 
   APP_PRIVATE_SCHEMA = "app_private";
+  # One per app.
   APP_FRONT_SCHEMA = "app_front";
   APP_ADMIN_SCHEMA = "app_admin";
 
   # Postgres Database
   DB_DATABASE = "mydb";
+  DB_DATABASE_SHADOW = "${DB_DATABASE}_shadow";
   DB_PORT = 9876;
   DB_OWNER_USER = "alexandre";
   DB_OWNER_PASS = "alexandre";
 
   # Postgrest api
   PGRST_PORT = 3333;
-  PGRST_DB_ANON_ROLE = "alexandre";
+  PGRST_DB_ANON_ROLE = APP_ANON_ROLE;
+  PGRST_JWT_SECRET = "Q7uIlar1k1NY9Uz68SCM6gIOFrJIWgXM";
 
   # OpenApi UI
   OPENAPI_UI_PORT = 3434;
   OPENAPI_API_PORT = PGRST_PORT;
+
   in {
   env = {
     APP_ENV = "development";
@@ -34,6 +39,8 @@
     bun
     postgrest
     watchexec
+    cowsay
+    lolcat
   ];
 
   scripts = {
@@ -51,18 +58,36 @@
         ADMIN_SCHEMA=${APP_ADMIN_SCHEMA} \
         ${pkgs.bun}/bin/bunx --bunx graphile-migrate@next $1
     '';
+
+    init.exec = ''
+      for file in ./apps/database/init/*; do 
+        POSTGRES_USER="${DB_OWNER_USER}" \
+        POSTGRES_PASS="${DB_OWNER_PASS}" \
+        POSTGRES_DB="${DB_DATABASE}" \
+        DB_DATABASE_SHADOW="${DB_DATABASE_SHADOW}" \
+        AUTH_ROLE="${APP_AUTH_ROLE}" \
+        AUTH_PASS="${APP_AUTH_PASS}" \
+        ANON_ROLE="${APP_ANON_ROLE}" \
+        PERSON_ROLE="${APP_PERSON_ROLE}" \
+        bash $file
+      done
+
+    '';
   };
 
   processes = {
-# Postgrest
-# https://postgrest.org/en/v12/references/api/schemas.html#schemas
-# https://postgrest.org/en/v12/references/configuration.html
+    # Postgrest
+    # https://postgrest.org/en/v12/references/api/schemas.html#schemas
+    # https://postgrest.org/en/v12/references/configuration.html
+    # https://postgrest.org/en/v12/references/configuration.html#openapi-mode
     postgrest.exec = ''
-      PGRST_DB_URI="postgres://${DB_OWNER_USER}:${DB_OWNER_PASS}@localhost:${toString DB_PORT}/${DB_DATABASE}" \
+      PGRST_DB_URI="postgres://${APP_AUTH_ROLE}:${APP_AUTH_PASS}@localhost:${toString DB_PORT}/${DB_DATABASE}" \
         PGRST_SERVER_PORT="${toString PGRST_PORT}" \
-        PGRST_OPEN_API_MODE="ignore-privileges" \
         PGRST_DB_ANON_ROLE="${PGRST_DB_ANON_ROLE}" \
-        PGRST_DB_SCHEMAS="${APP_FRONT_SCHEMA}, ${APP_ADMIN_SCHEMA}" \
+        PGRST_DB_SCHEMAS="${APP_ADMIN_SCHEMA}, ${APP_FRONT_SCHEMA}" \
+        PGRST_JWT_SECRET=${PGRST_JWT_SECRET} \
+        PGRST_OPENAPI_MODE="ignore-privileges" \
+        PGRST_LOG_LEVEL="info" \
         postgrest
     '';
 
@@ -81,9 +106,12 @@
     '';
   };
 
+
+
+  
+
   enterShell = ''
-    hello
-    git --version
+    echo "Welcome to the Postgres Stack !" | ${pkgs.cowsay}/bin/cowsay | ${pkgs.lolcat}/bin/lolcat
   '';
 
   services.postgres = {
@@ -95,8 +123,9 @@
       { name = DB_DATABASE; }
     ];
     initialScript = ''
-      drop role if exists ${DB_OWNER_USER};
       create role ${DB_OWNER_USER} with login password '${DB_OWNER_PASS}' superuser;
+	    grant connect on database postgres to ${DB_OWNER_USER};
+	    grant all on database ${DB_DATABASE} to ${DB_OWNER_USER};
     '';
   };
 }

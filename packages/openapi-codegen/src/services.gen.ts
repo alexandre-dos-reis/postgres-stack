@@ -19,3 +19,151 @@ export class IntrospectionService {
     }
     
 }
+
+export class ArtworksService {
+    /**
+     * @param data The data for the request.
+     * @param data.id
+     * @param data.name
+     * @param data.description
+     * @param data.slug
+     * @param data.nameInNativeLanguage
+     * @param data.dateFormat
+     * @param data.currency
+     * @param data.isPublished
+     * @param data.file
+     * @param data.select Filtering Columns
+     * @param data.order Ordering
+     * @param data.range Limiting and Pagination
+     * @param data.rangeUnit Limiting and Pagination
+     * @param data.offset Limiting and Pagination
+     * @param data.limit Limiting and Pagination
+     * @param data.prefer Preference
+     * @returns artworks OK
+     * @returns unknown Partial Content
+     * @throws ApiError
+     */
+    public static getArtworks(data: $OpenApiTs['/artworks']['get']['req'] = {}): CancelablePromise<$OpenApiTs['/artworks']['get']['res'][200] | $OpenApiTs['/artworks']['get']['res'][206]> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/artworks',
+            headers: {
+                Range: data.range,
+                'Range-Unit': data.rangeUnit,
+                Prefer: data.prefer
+            },
+            query: {
+                id: data.id,
+                name: data.name,
+                description: data.description,
+                slug: data.slug,
+                name_in_native_language: data.nameInNativeLanguage,
+                date_format: data.dateFormat,
+                currency: data.currency,
+                is_published: data.isPublished,
+                file: data.file,
+                select: data.select,
+                order: data.order,
+                offset: data.offset,
+                limit: data.limit
+            }
+        });
+    }
+    
+    /**
+     * @param data The data for the request.
+     * @param data.artworks artworks
+     * @param data.select Filtering Columns
+     * @param data.prefer Preference
+     * @returns unknown Created
+     * @throws ApiError
+     */
+    public static postArtworks(data: $OpenApiTs['/artworks']['post']['req'] = {}): CancelablePromise<$OpenApiTs['/artworks']['post']['res'][201]> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/artworks',
+            headers: {
+                Prefer: data.prefer
+            },
+            query: {
+                select: data.select
+            },
+            body: data.artworks
+        });
+    }
+    
+    /**
+     * @param data The data for the request.
+     * @param data.id
+     * @param data.name
+     * @param data.description
+     * @param data.slug
+     * @param data.nameInNativeLanguage
+     * @param data.dateFormat
+     * @param data.currency
+     * @param data.isPublished
+     * @param data.file
+     * @param data.prefer Preference
+     * @returns void No Content
+     * @throws ApiError
+     */
+    public static deleteArtworks(data: $OpenApiTs['/artworks']['delete']['req'] = {}): CancelablePromise<$OpenApiTs['/artworks']['delete']['res'][204]> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/artworks',
+            headers: {
+                Prefer: data.prefer
+            },
+            query: {
+                id: data.id,
+                name: data.name,
+                description: data.description,
+                slug: data.slug,
+                name_in_native_language: data.nameInNativeLanguage,
+                date_format: data.dateFormat,
+                currency: data.currency,
+                is_published: data.isPublished,
+                file: data.file
+            }
+        });
+    }
+    
+    /**
+     * @param data The data for the request.
+     * @param data.id
+     * @param data.name
+     * @param data.description
+     * @param data.slug
+     * @param data.nameInNativeLanguage
+     * @param data.dateFormat
+     * @param data.currency
+     * @param data.isPublished
+     * @param data.file
+     * @param data.artworks artworks
+     * @param data.prefer Preference
+     * @returns void No Content
+     * @throws ApiError
+     */
+    public static patchArtworks(data: $OpenApiTs['/artworks']['patch']['req'] = {}): CancelablePromise<$OpenApiTs['/artworks']['patch']['res'][204]> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/artworks',
+            headers: {
+                Prefer: data.prefer
+            },
+            query: {
+                id: data.id,
+                name: data.name,
+                description: data.description,
+                slug: data.slug,
+                name_in_native_language: data.nameInNativeLanguage,
+                date_format: data.dateFormat,
+                currency: data.currency,
+                is_published: data.isPublished,
+                file: data.file
+            },
+            body: data.artworks
+        });
+    }
+    
+}
