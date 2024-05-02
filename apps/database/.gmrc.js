@@ -6,6 +6,7 @@ module.exports = {
     ":ANON_ROLE": "!ENV",
     ":PERSON_ROLE": "!ENV",
     ":PRIVATE_SCHEMA": "!ENV",
+    ":PUBLIC_SCHEMA": "!ENV",
     ":FRONT_SCHEMA": "!ENV",
     ":ADMIN_SCHEMA": "!ENV",
   },

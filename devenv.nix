@@ -9,6 +9,8 @@
 
   # One internal for all table 
   APP_PRIVATE_SCHEMA = "app_private";
+  # One external for login, etc...
+  APP_PUBLIC_SCHEMA = "app_public";
   # One per app.
   APP_FRONT_SCHEMA = "app_front";
   APP_ADMIN_SCHEMA = "app_admin";
@@ -59,6 +61,7 @@
       ANON_ROLE=${APP_ANON_ROLE} \
       PERSON_ROLE=${APP_PERSON_ROLE} \
       PRIVATE_SCHEMA=${APP_PRIVATE_SCHEMA} \
+      PUBLIC_SCHEMA=${APP_PUBLIC_SCHEMA} \
       FRONT_SCHEMA=${APP_FRONT_SCHEMA} \
       ADMIN_SCHEMA=${APP_ADMIN_SCHEMA} \
       ${pkgs.bun}/bin/bunx --bunx graphile-migrate@next $1
@@ -90,7 +93,7 @@
       PGRST_DB_URI="postgres://${APP_AUTH_ROLE}:${APP_AUTH_PASS}@localhost:${toString DB_PORT}/${DB_DATABASE}" \
       PGRST_SERVER_PORT="${toString PGRST_PORT}" \
       PGRST_DB_ANON_ROLE="${PGRST_DB_ANON_ROLE}" \
-      PGRST_DB_SCHEMAS="${APP_ADMIN_SCHEMA}, ${APP_FRONT_SCHEMA}" \
+      PGRST_DB_SCHEMAS="${APP_PUBLIC_SCHEMA}, ${APP_ADMIN_SCHEMA}, ${APP_FRONT_SCHEMA}" \
       PGRST_JWT_SECRET=${PGRST_JWT_SECRET} \
       PGRST_OPENAPI_MODE="ignore-privileges" \
       postgrest
@@ -117,6 +120,9 @@
     package = pkgs.postgresql_16;
     listen_addresses = "127.0.0.1";
     port = DB_PORT;
+    extensions = ext: [
+      ext.pgjwt
+    ];
     initialDatabases = [
       { name = DB_DATABASE; }
     ];
