@@ -15,11 +15,11 @@ module.exports = {
     // { "_": "command", "command": "graphile-worker --schema-only" },
   ],
   afterAllMigrations: [
-    // {
-    //   "_": "command",
-    //   "shadow": true,
-    //   "command": "if [ \"$IN_TESTS\" != \"1\" ]; then ./scripts/dump-db; fi",
-    // },
+    {
+      _: "command",
+      shadow: true,
+      command: 'if [ "$IN_TESTS" != "1" ]; then ./scripts/dump-db.sh; fi',
+    },
   ],
 
   afterCurrent: [

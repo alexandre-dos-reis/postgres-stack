@@ -32,10 +32,19 @@ grant usage on schema :PUBLIC_SCHEMA to :ANON_ROLE;
 
 alter default privileges in schema public, :PUBLIC_SCHEMA, :FRONT_SCHEMA, :ADMIN_SCHEMA, app_utils, app_types grant usage, select on sequences to :PERSON_ROLE;
 alter default privileges in schema public, :PUBLIC_SCHEMA, :FRONT_SCHEMA, :ADMIN_SCHEMA, app_utils, app_types grant execute on functions to :PERSON_ROLE;
-alter default privileges in schema public, :PUBLIC_SCHEMA grant execute on functions to :ANON_ROLE;
+alter default privileges in schema :PUBLIC_SCHEMA grant execute on functions to :ANON_ROLE;
 
+create or replace function app_utils.slugify(v text) returns text as $$
+begin
+  -- 1. trim trailing and leading whitespaces from text
+  -- 2. remove accents (diacritic signs) from a given text
+  -- 3. lowercase unaccented text
+  -- 4. replace non-alphanumeric (excluding hyphen, underscore) with a hyphen
+  -- 5. trim leading and trailing hyphens
+  return trim(BOTH '-' FROM regexp_replace(lower(public.unaccent(trim(v))), '[^a-z0-9\\-_]+', '-', 'gi'));
+end;
+$$ language PLPGSQL strict immutable ;
 
---!include app-utils/slugify.sql
 
 drop table if exists :PRIVATE_SCHEMA.artworks;
 create table :PRIVATE_SCHEMA.artworks (
@@ -71,7 +80,17 @@ create table if not exists :PRIVATE_SCHEMA.users (
   role     name not null check (length(role) < 512)
 );
 
---!include app-utils/check-role-exists.sql
+create or replace function app_utils.check_role_exists() returns trigger as $$
+begin
+  if not exists (select 1 from pg_roles as r where r.rolname = new.role) then
+    raise foreign_key_violation using message =
+      'unknown database role: ' || new.role;
+    return null;
+  end if;
+  return new;
+end
+$$ language plpgsql;
+
 
 drop trigger if exists ensure_user_role_exists on :PRIVATE_SCHEMA.users;
 create constraint trigger ensure_user_role_exists
@@ -80,7 +99,16 @@ create constraint trigger ensure_user_role_exists
   execute procedure app_utils.check_role_exists();
 
 
---!include app-utils/encrypt-password.sql
+create or replace function app_utils.encrypt_pass() returns trigger as $$
+begin
+  if tg_op = 'INSERT' or new.pass <> old.pass then
+    new.pass = public.crypt(new.pass, public.gen_salt('bf'));
+  end if;
+  return new;
+end
+$$ language plpgsql;
+
+
 
 drop trigger if exists encrypt_password on :PRIVATE_SCHEMA.users;
 create trigger encrypt_password
@@ -89,7 +117,18 @@ create trigger encrypt_password
   execute procedure app_utils.encrypt_pass();
 
 
---!include app-utils/user-role.sql
+create or replace function app_utils.user_role(email text, pass text) returns name
+  language plpgsql
+  as $$
+begin
+  return (
+  select role from :PRIVATE_SCHEMA.users
+   where users.email = user_role.email
+     and users.pass = crypt(user_role.pass, users.pass)
+  );
+end;
+$$;
+
 
 CREATE TYPE app_utils.jwt_token AS (
   token text
@@ -118,10 +157,10 @@ begin
 end;
 $$ language plpgsql security definer;
 
+-- doc says it useless... Need to remove to test.
+grant execute on function :PUBLIC_SCHEMA.login(text,text) to :ANON_ROLE;
 
 -- Create a singup function with minimum right...
 -- create or replace function :PUBLIC_SCHEMA.signup(email text, pass text) returns app_utils.jwt_token as $$
 --
 -- $$ language plpgsql security definer;
-
-grant execute on function :PUBLIC_SCHEMA.login(text,text) to :ANON_ROLE;

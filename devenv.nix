@@ -67,7 +67,7 @@
       ${pkgs.bun}/bin/bunx --bunx graphile-migrate@next $1
     '';
 
-    init.exec = ''
+    db-init.exec = ''
       for file in ./apps/database/init/*; do
         POSTGRES_USER="${DB_OWNER_USER}" \
         POSTGRES_PASS="${DB_OWNER_PASS}" \
