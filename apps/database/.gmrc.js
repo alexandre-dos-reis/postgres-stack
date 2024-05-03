@@ -6,6 +6,7 @@ module.exports = {
     ":ANON_ROLE": "!ENV",
     ":PERSON_ROLE": "!ENV",
     ":PRIVATE_SCHEMA": "!ENV",
+    ":PUBLIC_SCHEMA": "!ENV",
     ":FRONT_SCHEMA": "!ENV",
     ":ADMIN_SCHEMA": "!ENV",
   },
@@ -14,11 +15,11 @@ module.exports = {
     // { "_": "command", "command": "graphile-worker --schema-only" },
   ],
   afterAllMigrations: [
-    // {
-    //   "_": "command",
-    //   "shadow": true,
-    //   "command": "if [ \"$IN_TESTS\" != \"1\" ]; then ./scripts/dump-db; fi",
-    // },
+    {
+      _: "command",
+      shadow: true,
+      command: 'if [ "$IN_TESTS" != "1" ]; then ./scripts/dump-db.sh; fi',
+    },
   ],
 
   afterCurrent: [
