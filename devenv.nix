@@ -25,12 +25,14 @@
   # Postgrest api
   PGRST_PORT = 3333;
   PGRST_DB_ANON_ROLE = APP_ANON_ROLE;
-  PGRST_JWT_SECRET = "Q7uIlar1k1NY9Uz68SCM6gIOFrJIWgXM";
-  PGRST_APP_SETTINGS_JWT_SECRET = "reallyreallyreallyreallyverysafe";
+  PGRST_JWT_SECRET = "Q7uIlar1k1NY9Uz68SCM6gIOFrJIWgXMsldkfjlsdkjf";
 
   # OpenApi UI
   OPENAPI_UI_PORT = 3434;
   OPENAPI_API_PORT = PGRST_PORT;
+
+  # admin
+  ADMIN_PORT = 3535;
 
   in {
   env = {
@@ -96,10 +98,16 @@
       PGRST_DB_ANON_ROLE="${PGRST_DB_ANON_ROLE}" \
       PGRST_DB_SCHEMAS="${APP_PUBLIC_SCHEMA}, ${APP_ADMIN_SCHEMA}, ${APP_FRONT_SCHEMA}" \
       PGRST_JWT_SECRET=${PGRST_JWT_SECRET} \
-      PGRST_APP_SETTINGS_JWT_SECRET=${PGRST_APP_SETTINGS_JWT_SECRET} \
+      PGRST_APP_SETTINGS_JWT_SECRET=${PGRST_JWT_SECRET} \
       PGRST_OPENAPI_MODE="ignore-privileges" \
       PGRST_OPENAPI_SECURITY_ACTIVE=true \
       postgrest
+    '';
+
+    admin.exec = ''
+      cd apps/admin && \
+      VITE_PGRST_URL=http://localhost:${toString PGRST_PORT} \
+      ${pkgs.bun}/bin/bun run dev --port ${toString ADMIN_PORT}
     '';
 
     openapi-ui.exec = ''
