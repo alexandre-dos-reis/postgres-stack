@@ -72,12 +72,13 @@ grant all on table
   :FRONT_SCHEMA.artworks
 to :PERSON_ROLE;
 
-
 create table if not exists :PRIVATE_SCHEMA.users (
-  id       uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  email    text unique not null check ( email ~* '^.+@.+\..+$' ),
-  pass     text not null check (length(pass) < 512),
-  role     name not null check (length(role) < 512)
+  id           uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  firstname    text check (length(pass) < 512),
+  lastname     text check (length(pass) < 512),
+  email        text unique not null check ( email ~* '^.+@.+\..+$' ),
+  pass         text not null check (length(pass) < 512),
+  role         name not null check (length(role) < 512)
 );
 
 create or replace function app_utils.check_role_exists() returns trigger as $$
@@ -107,7 +108,6 @@ begin
   return new;
 end
 $$ language plpgsql;
-
 
 
 drop trigger if exists encrypt_password on :PRIVATE_SCHEMA.users;
@@ -146,7 +146,7 @@ begin
   end if;
 
   select sign(
-      row_to_json(r), 'reallyreallyreallyreallyverysafe'
+      row_to_json(r), current_setting('app.settings.jwt_secret')
     ) as token
     from (
       select _role as role, login.email as email,
@@ -160,7 +160,22 @@ $$ language plpgsql security definer;
 -- doc says it useless... Need to remove to test.
 grant execute on function :PUBLIC_SCHEMA.login(text,text) to :ANON_ROLE;
 
--- Create a singup function with minimum right...
--- create or replace function :PUBLIC_SCHEMA.signup(email text, pass text) returns app_utils.jwt_token as $$
---
--- $$ language plpgsql security definer;
+create function :PUBLIC_SCHEMA.register_person(
+  firstname text,
+  lastname text,
+  email text,
+  pass text
+) returns record as $$
+declare 
+  record record;
+begin
+  insert into :PRIVATE_SCHEMA.users as u
+    (firstname, lastname, email, pass, role) values
+    ($1, $2, $3, $4, 'person') returning
+    u.firstname, u.lastname, u.email, u.role into record;
+
+  return record;
+end;
+$$ language plpgsql strict security definer;
+
+grant execute on function :PUBLIC_SCHEMA.register_person(text,text,text,text) to :ANON_ROLE;

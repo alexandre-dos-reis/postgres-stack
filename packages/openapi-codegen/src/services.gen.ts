@@ -20,149 +20,83 @@ export class IntrospectionService {
     
 }
 
-export class ArtworksService {
+export class RpcLoginService {
     /**
      * @param data The data for the request.
-     * @param data.id
-     * @param data.name
-     * @param data.description
-     * @param data.slug
-     * @param data.nameInNativeLanguage
-     * @param data.dateFormat
-     * @param data.currency
-     * @param data.isPublished
-     * @param data.file
-     * @param data.select Filtering Columns
-     * @param data.order Ordering
-     * @param data.range Limiting and Pagination
-     * @param data.rangeUnit Limiting and Pagination
-     * @param data.offset Limiting and Pagination
-     * @param data.limit Limiting and Pagination
-     * @param data.prefer Preference
-     * @returns artworks OK
-     * @returns unknown Partial Content
+     * @param data.email
+     * @param data.pass
+     * @returns unknown OK
      * @throws ApiError
      */
-    public static getArtworks(data: $OpenApiTs['/artworks']['get']['req'] = {}): CancelablePromise<$OpenApiTs['/artworks']['get']['res'][200] | $OpenApiTs['/artworks']['get']['res'][206]> {
+    public static getRpcLogin(data: $OpenApiTs['/rpc/login']['get']['req']): CancelablePromise<$OpenApiTs['/rpc/login']['get']['res'][200]> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/artworks',
-            headers: {
-                Range: data.range,
-                'Range-Unit': data.rangeUnit,
-                Prefer: data.prefer
-            },
+            url: '/rpc/login',
             query: {
-                id: data.id,
-                name: data.name,
-                description: data.description,
-                slug: data.slug,
-                name_in_native_language: data.nameInNativeLanguage,
-                date_format: data.dateFormat,
-                currency: data.currency,
-                is_published: data.isPublished,
-                file: data.file,
-                select: data.select,
-                order: data.order,
-                offset: data.offset,
-                limit: data.limit
+                email: data.email,
+                pass: data.pass
             }
         });
     }
     
     /**
      * @param data The data for the request.
-     * @param data.artworks artworks
-     * @param data.select Filtering Columns
+     * @param data.args
      * @param data.prefer Preference
-     * @returns unknown Created
+     * @returns unknown OK
      * @throws ApiError
      */
-    public static postArtworks(data: $OpenApiTs['/artworks']['post']['req'] = {}): CancelablePromise<$OpenApiTs['/artworks']['post']['res'][201]> {
+    public static postRpcLogin(data: $OpenApiTs['/rpc/login']['post']['req']): CancelablePromise<$OpenApiTs['/rpc/login']['post']['res'][200]> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/artworks',
+            url: '/rpc/login',
             headers: {
                 Prefer: data.prefer
             },
-            query: {
-                select: data.select
-            },
-            body: data.artworks
+            body: data.args
         });
     }
     
+}
+
+export class RpcRegisterPersonService {
     /**
      * @param data The data for the request.
-     * @param data.id
-     * @param data.name
-     * @param data.description
-     * @param data.slug
-     * @param data.nameInNativeLanguage
-     * @param data.dateFormat
-     * @param data.currency
-     * @param data.isPublished
-     * @param data.file
-     * @param data.prefer Preference
-     * @returns void No Content
+     * @param data.firstname
+     * @param data.lastname
+     * @param data.email
+     * @param data.password
+     * @returns unknown OK
      * @throws ApiError
      */
-    public static deleteArtworks(data: $OpenApiTs['/artworks']['delete']['req'] = {}): CancelablePromise<$OpenApiTs['/artworks']['delete']['res'][204]> {
+    public static getRpcRegisterPerson(data: $OpenApiTs['/rpc/register_person']['get']['req']): CancelablePromise<$OpenApiTs['/rpc/register_person']['get']['res'][200]> {
         return __request(OpenAPI, {
-            method: 'DELETE',
-            url: '/artworks',
-            headers: {
-                Prefer: data.prefer
-            },
+            method: 'GET',
+            url: '/rpc/register_person',
             query: {
-                id: data.id,
-                name: data.name,
-                description: data.description,
-                slug: data.slug,
-                name_in_native_language: data.nameInNativeLanguage,
-                date_format: data.dateFormat,
-                currency: data.currency,
-                is_published: data.isPublished,
-                file: data.file
+                firstname: data.firstname,
+                lastname: data.lastname,
+                email: data.email,
+                password: data.password
             }
         });
     }
     
     /**
      * @param data The data for the request.
-     * @param data.id
-     * @param data.name
-     * @param data.description
-     * @param data.slug
-     * @param data.nameInNativeLanguage
-     * @param data.dateFormat
-     * @param data.currency
-     * @param data.isPublished
-     * @param data.file
-     * @param data.artworks artworks
+     * @param data.args
      * @param data.prefer Preference
-     * @returns void No Content
+     * @returns unknown OK
      * @throws ApiError
      */
-    public static patchArtworks(data: $OpenApiTs['/artworks']['patch']['req'] = {}): CancelablePromise<$OpenApiTs['/artworks']['patch']['res'][204]> {
+    public static postRpcRegisterPerson(data: $OpenApiTs['/rpc/register_person']['post']['req']): CancelablePromise<$OpenApiTs['/rpc/register_person']['post']['res'][200]> {
         return __request(OpenAPI, {
-            method: 'PATCH',
-            url: '/artworks',
+            method: 'POST',
+            url: '/rpc/register_person',
             headers: {
                 Prefer: data.prefer
             },
-            query: {
-                id: data.id,
-                name: data.name,
-                description: data.description,
-                slug: data.slug,
-                name_in_native_language: data.nameInNativeLanguage,
-                date_format: data.dateFormat,
-                currency: data.currency,
-                is_published: data.isPublished,
-                file: data.file
-            },
-            body: data.artworks
+            body: data.args
         });
     }
     
