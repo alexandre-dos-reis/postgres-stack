@@ -126,6 +126,12 @@
   };
 
 
+  services.adminer = {
+    listen = "127.0.0.1:8888";
+    enable = true;
+  };
+
+
   services.postgres = {
     enable = true;
     package = pkgs.postgresql_16;
